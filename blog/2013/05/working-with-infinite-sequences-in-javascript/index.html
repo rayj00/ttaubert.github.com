@@ -6,8 +6,8 @@
     <title>Working with infinite sequences in JavaScript - Tim Taubert</title>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     
-    <meta name="description" content="Working with infinite sequences in JavaScript May, 6th 2013 Update: Please note that this post describes the current implementation in
-SpiderMonkey &hellip;">
+    <meta name="description" content="Working with infinite sequences in JavaScript May, 6th 2013 JavaScript comes with most of the little functional tools you need to work on
+finite &hellip;">
     <meta content="Tim Taubert" name="author">
     <link href="http://fonts.googleapis.com/css?family=Droid+Sans:400,700|PT+Sans" media="screen" rel="stylesheet" type="text/css" />
     <link href="/stylesheets/screen.css" media="screen" rel="stylesheet" type="text/css">
@@ -67,14 +67,7 @@ SpiderMonkey &hellip;">
 
 <time datetime="2013-05-06T12:00:00+02:00" pubdate data-updated="true">May, 6<span>th</span> 2013</time>
   </header>
-  <blockquote><p>Update: Please note that this post describes the current implementation in
-SpiderMonkey. The final
-<a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">ES6 specification</a>
-will require generator functions to have a &#8216;*&#8217; token as in <em>function* nat()
-{ &#8230; }</em>. The <em>flatten()</em> function from the last example could use <em>yield*</em> to
-delegate instead of a nested loop.</p></blockquote>
-
-<p>JavaScript comes with most of the little functional tools you need to work on
+  <p>JavaScript comes with most of the little functional tools you need to work on
 finite sequences that are usually implemented using Arrays. Array.prototype
 includes a number of methods like <em>map()</em> and <em>filter()</em> that apply a given
 function to all items of the Array and return the resulting new Array.</p>
@@ -92,19 +85,22 @@ need to be maintained for the duration of the computation process.</p>
 <h2>Generators to the rescue</h2>
 
 <p>Using ES6
-<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Iterators_and_Generators">generators</a>
+<a href="http://wiki.ecmascript.org/doku.php?id=harmony:generators">generators</a>
 implementing the infinite sequence of all natural numbers turns out to be a
 trivial task. We even have language support to iterate over them.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">function</span> <span class="nx">nat</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">function</span><span class="o">*</span> <span class="nx">nat</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kd">let</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
   <span class="k">while</span> <span class="p">(</span><span class="kc">true</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">yield</span> <span class="nx">i</span><span class="o">++</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">nat</span><span class="p">();</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 1 2 3</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">nat</span><span class="p">())</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 1 2 3 4 ...</span>
 </pre></div></figure>
 
 
@@ -117,8 +113,8 @@ working with, combining, and building new sequences.</p>
 programming. It builds a new sequence by applying a function to all elements of
 a given sequence.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">function</span> <span class="nx">map</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">function</span><span class="o">*</span> <span class="nx">map</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">yield</span> <span class="nx">f</span><span class="p">(</span><span class="nx">x</span><span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
@@ -133,21 +129,27 @@ called <em>squares()</em> that represents the set of squares of all natural numb
   <span class="k">return</span> <span class="nx">map</span><span class="p">(</span><span class="nx">nat</span><span class="p">(),</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">x</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">squares</span><span class="p">();</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 1 4 9</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">squares</span><span class="p">())</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 1 4 9 16 ...</span>
 </pre></div></figure>
 
 
-<p>Using
-<a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/for...in">for&#8230;in</a>
-instead of
+<p>As we are using
 <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Statements/for...of">for&#8230;of</a>
-works fine but using <em>of</em> has a neat advantage in that it properly iterates
-Arrays as well. If you want to map values of a finite sequence you can just do
-that.</p>
+we can also pass an Array to <em>map()</em> to retrieve a new generator with a finite
+source. The given function is applied to value after value instead of to all
+values at once when using <em>Array.prototype.map</em>.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">map</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">x</span><span class="p">);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 1 4 9</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">let</span> <span class="nx">squares</span> <span class="o">=</span> <span class="nx">map</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="nx">x</span> <span class="o">*</span> <span class="nx">x</span><span class="p">);</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">squares</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 1 4 9</span>
 </pre></div></figure>
 
 
@@ -158,8 +160,8 @@ implementation of <em>filter()</em> takes an iterator and a predicate - the retu
 sequence will consist of all items of the original one for which the predicate
 holds.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">function</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">function</span><span class="o">*</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="nx">f</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="p">{</span>
       <span class="k">yield</span> <span class="nx">x</span><span class="p">;</span>
     <span class="p">}</span>
@@ -174,8 +176,11 @@ holds.</p>
   <span class="k">return</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">nat</span><span class="p">(),</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="nx">x</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">===</span> <span class="mi">0</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">even</span><span class="p">();</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 2 4 6</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">even</span><span class="p">())</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 2 4 6 8 ...</span>
 </pre></div></figure>
 
 
@@ -208,14 +213,14 @@ natural numbers in a given range. <em>forall()</em> returns whether the given pr
 holds for all items in the sequence and should therefore only be used for finite
 sequences.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">function</span> <span class="nx">range</span><span class="p">(</span><span class="nx">lo</span><span class="p">,</span> <span class="nx">hi</span><span class="p">)</span> <span class="p">{</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">function</span><span class="o">*</span> <span class="nx">range</span><span class="p">(</span><span class="nx">lo</span><span class="p">,</span> <span class="nx">hi</span><span class="p">)</span> <span class="p">{</span>
   <span class="k">while</span> <span class="p">(</span><span class="nx">lo</span> <span class="o">&lt;=</span> <span class="nx">hi</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">yield</span> <span class="nx">lo</span><span class="o">++</span><span class="p">;</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">forall</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">f</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="p">{</span>
       <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
     <span class="p">}</span>
@@ -244,8 +249,11 @@ numbers from <em>mersenneNumbers()</em>.</p>
   <span class="k">return</span> <span class="nx">filter</span><span class="p">(</span><span class="nx">mersenneNumbers</span><span class="p">(),</span> <span class="nx">isPrime</span><span class="p">);</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">mersennePrimes</span><span class="p">();</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 3 7 31</span>
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">mprime</span> <span class="k">of</span> <span class="nx">mersennePrimes</span><span class="p">())</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">mprime</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 3 7 31 127 ...</span>
 </pre></div></figure>
 
 
@@ -253,13 +261,10 @@ numbers from <em>mersenneNumbers()</em>.</p>
 
 <p>As a last example we will implement a function that flattens nested sequences.</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="kd">function</span> <span class="nx">flatten</span><span class="p">(</span><span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="nb">Object</span><span class="p">.</span><span class="nx">prototype</span><span class="p">.</span><span class="nx">toString</span><span class="p">.</span><span class="nx">call</span><span class="p">(</span><span class="nx">x</span><span class="p">)</span> <span class="o">===</span> <span class="s2">&quot;[object Generator]&quot;</span> <span class="o">||</span>
-        <span class="nb">Array</span><span class="p">.</span><span class="nx">isArray</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="p">{</span>
-      <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">y</span> <span class="k">of</span> <span class="nx">flatten</span><span class="p">(</span><span class="nx">x</span><span class="p">))</span> <span class="p">{</span>
-        <span class="k">yield</span> <span class="nx">y</span><span class="p">;</span>
-      <span class="p">}</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">function</span><span class="o">*</span> <span class="nx">flatten</span><span class="p">(</span><span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">x</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">typeof</span><span class="p">(</span><span class="nx">x</span><span class="p">[</span><span class="s2">&quot;@@iterator&quot;</span><span class="p">])</span> <span class="o">==</span> <span class="s2">&quot;function&quot;</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">yield</span><span class="o">*</span> <span class="nx">flatten</span><span class="p">(</span><span class="nx">x</span><span class="p">);</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
       <span class="k">yield</span> <span class="nx">x</span><span class="p">;</span>
     <span class="p">}</span>
@@ -271,7 +276,13 @@ numbers from <em>mersenneNumbers()</em>.</p>
 <p>Note that using <em>for&#8230;of</em> comes in handy again as we can use it to iterate
 over Arrays and generators. Using <em>flatten()</em> we can now do:</p>
 
-<figure class='code'> <div class="highlight"><pre><span class="nx">flatten</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[[</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">]]]);</span> <span class="c1">// result: [1, 2, 3, 4, 5]</span>
+<figure class='code'> <div class="highlight"><pre><span class="kd">let</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">flatten</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="p">[[</span><span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">]]]);</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 1 2 3 4 5</span>
 </pre></div></figure>
 
 
@@ -284,18 +295,24 @@ from the set of all even natural numbers.</p>
   <span class="k">return</span> <span class="nx">flatten</span><span class="p">(</span><span class="nx">map</span><span class="p">(</span><span class="nx">it</span><span class="p">,</span> <span class="nx">f</span><span class="p">));</span>
 <span class="p">}</span>
 
-<span class="kd">var</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">flatMap</span><span class="p">(</span><span class="nx">even</span><span class="p">(),</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">x</span><span class="p">]);</span>
-<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">(),</span> <span class="nx">it</span><span class="p">.</span><span class="nx">next</span><span class="p">());</span> <span class="c1">// prints 1 2 3</span>
+<span class="kd">let</span> <span class="nx">it</span> <span class="o">=</span> <span class="nx">flatMap</span><span class="p">(</span><span class="nx">even</span><span class="p">(),</span> <span class="nx">x</span> <span class="o">=&gt;</span> <span class="p">[</span><span class="nx">x</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">x</span><span class="p">]);</span>
+
+<span class="k">for</span> <span class="p">(</span><span class="kd">let</span> <span class="nx">num</span> <span class="k">of</span> <span class="nx">it</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">print</span><span class="p">(</span><span class="nx">num</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="c1">// prints 1 2 3 4 ...</span>
 </pre></div></figure>
 
 
 <h2>Generators are powerful</h2>
 
-<p>It is quite obvious that studying ES6 generators really repays. They are a very
-powerful language construct and I personally cannot wait until they are
-available in V8/Node.js as well. They will be in the toolbox of every
-professional JavaScript developer soon and I am sure we can count on the
-community to come up with lots of great uses and libraries.</p>
+<p>It is quite obvious that studying ES6 generators really repays. Thanks to Andy
+Wingo these are available in the latest versions of
+<a href="http://wingolog.org/archives/2013/10/07/es6-generators-and-iteration-in-spidermonkey">Firefox</a> and
+<a href="http://wingolog.org/archives/2013/05/08/generators-in-v8">Chrome</a>. They will be
+in the toolbox of every professional JavaScript developer soon and I am sure we
+can count on the community to come up with lots of great uses and libraries.</p>
 
 </article>
 
